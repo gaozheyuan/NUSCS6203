@@ -1,4 +1,4 @@
-package testhadoop.Hadoop_2_7_1;
+package edu.nus.submodular.hadoop.test;
 
 /**
  * Hello world!

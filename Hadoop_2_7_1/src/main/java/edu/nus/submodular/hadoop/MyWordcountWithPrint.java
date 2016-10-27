@@ -1,4 +1,4 @@
-package MyHadoopProject.Hadoop_2_7_1;
+package edu.nus.submodular.hadoop;
 
 import java.io.IOException;
 import java.util.StringTokenizer;
