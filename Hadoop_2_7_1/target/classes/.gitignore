@@ -1,0 +1,6 @@
+/wordcount.class
+/WordCount$MapClass.class
+/WordCount$Reduce.class
+/WordCount.class
+/WordCount$IntSumReducer.class
+/WordCount$TokenizerMapper.class
