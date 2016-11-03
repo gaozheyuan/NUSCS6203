@@ -7,33 +7,17 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
 public class SubmodularMapper extends Mapper<LongWritable, Text, Text, Text> {
-	private Integer numOfGroups;
-	private Integer currentNumOfLine=0;
-	private Integer totalNumOfLine;
-	public Integer getCurrentNumOfLine() {
-		return currentNumOfLine;
-	}
-	public void setCurrentNumOfLine(Integer currentNumOfLine) {
-		this.currentNumOfLine = currentNumOfLine;
-	}
-	public Integer getTotalNumOfLine() {
-		return totalNumOfLine;
-	}
-	public void setTotalNumOfLine(Integer totalNumOfLine) {
-		this.totalNumOfLine = totalNumOfLine;
-	}
-	public Integer getNumOfGroups() {
-		return numOfGroups;
-	}
-	public void setNumOfGroups(Integer numOfGroups) {
-		this.numOfGroups = numOfGroups;
+	public static Integer currentNumOfLine=0;
+	public static Integer totalNumOfLine;
+	public SubmodularMapper()
+	{
+		System.out.print("mapper created!");
 	}
 	public void map(LongWritable ikey, Text ivalue, Context context)
 			throws IOException, InterruptedException {
 		Text texKey = new Text();
-		currentNumOfLine++;
-		Integer groupIndex=(int)Math.floor((double)currentNumOfLine/totalNumOfLine*numOfGroups);
-		texKey.set(groupIndex.toString());
+		texKey.set("1");
+		System.out.println(ivalue.toString());
 		context.write(texKey, ivalue);
 	}
 }

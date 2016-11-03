@@ -1,9 +1,12 @@
 package edu.nus.submodular.hadoop.driver;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.LineNumberReader;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -19,12 +22,12 @@ import edu.nus.submodular.hadoop.core.SubmodularReducer;
 public class SubmodularDriver {
 	
 	public static void main(String[] args) throws Exception {
-		int numOfInstances=countLines(args[0]);
+	
 		Configuration conf = new Configuration();
 		Job job = Job.getInstance(conf, "JobName");
 		job.setJarByClass(edu.nus.submodular.hadoop.driver.SubmodularDriver.class);
 		job.setMapperClass(SubmodularMapper.class);
-		job.setCombinerClass(SubmodularCombiner.class);
+		//job.setCombinerClass(SubmodularCombiner.class);
 		job.setReducerClass(SubmodularReducer.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
@@ -33,25 +36,5 @@ public class SubmodularDriver {
 
 		if (!job.waitForCompletion(true))
 			return;
-	}
-	public static int countLines(String filename) throws IOException {
-	    InputStream is = new BufferedInputStream(new FileInputStream(filename));
-	    try {
-	        byte[] c = new byte[1024];
-	        int count = 0;
-	        int readChars = 0;
-	        boolean empty = true;
-	        while ((readChars = is.read(c)) != -1) {
-	            empty = false;
-	            for (int i = 0; i < readChars; ++i) {
-	                if (c[i] == '\n') {
-	                    ++count;
-	                }
-	            }
-	        }
-	        return (count == 0 && !empty) ? 1 : count;
-	    } finally {
-	        is.close();
-	    }
 	}
 }

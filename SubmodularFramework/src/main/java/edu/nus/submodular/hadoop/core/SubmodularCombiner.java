@@ -11,33 +11,30 @@ import edu.nus.submodular.algorithm.impl.KMeans;
 
 public class SubmodularCombiner extends Reducer<Text, Text, Text, Text> {
 	KMeans inter=new KMeans();
+	
+	public SubmodularCombiner()
+	{
+		System.out.println("Combiner Created!");
+	}
 	public void reduce(Text _key, Iterable<Text> values, Context context)
 			throws IOException, InterruptedException {
-		// process values
-		
-		int numOfInstances=0;
 		int numOfFeatures=0;
 		for (Text val : values) {
-			numOfInstances++;
-			numOfFeatures=val.toString().split(" ").length;
-		}
-		double[][] data=new double[numOfInstances][numOfFeatures];
-		int index=0;
-		for (Text val : values) {
 			String[] strFeatures=val.toString().split(" ");
-			for(int indexFeature=0;indexFeature<strFeatures.length;indexFeature++)
+			numOfFeatures=strFeatures.length;
+			double[] feature=new double[numOfFeatures];
+			for(int indexFeature=0;indexFeature<numOfFeatures;indexFeature++)
 			{
-				data[index][indexFeature]=Double.parseDouble(strFeatures[indexFeature]);
+				feature[indexFeature]=Double.parseDouble(strFeatures[indexFeature]);
 			}
-			index++;
+			inter.getDataset().add(feature);
 		}
-		inter.setDataset(data);
 		ArrayList<double[]> repData=inter.getRepresentationData(5);
 		Text writeResult=new Text();
-		for(int index1=0;index1<repData.size();index1++)
+		for(int index=0;index<repData.size();index++)
 		{
 			writeResult=new Text();
-			String output=convertRepDatatoString(repData.get(index1));
+			String output=convertRepDatatoString(repData.get(index));
 			writeResult.set(output);
 			context.write(_key, writeResult);
 		}

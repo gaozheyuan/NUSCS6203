@@ -1,19 +1,47 @@
 package edu.nus.submodular.hadoop.core;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
-public class SubmodularReducer extends Reducer<Text, Text, Text, Text> {
+import edu.nus.submodular.algorithm.impl.KMeans;
 
+public class SubmodularReducer extends Reducer<Text, Text, Text, Text> {
+	KMeans inter=new KMeans();
 	public void reduce(Text _key, Iterable<Text> values, Context context)
 			throws IOException, InterruptedException {
-		// process values
-		
+		int numOfFeatures=0;
 		for (Text val : values) {
-			
+			String[] strFeatures=val.toString().split(" ");
+			numOfFeatures=strFeatures.length;
+			double[] feature=new double[numOfFeatures];
+			for(int indexFeature=0;indexFeature<numOfFeatures;indexFeature++)
+			{
+				feature[indexFeature]=Double.parseDouble(strFeatures[indexFeature]);
+			}
+			inter.getDataset().add(feature);
+		}
+		ArrayList<double[]> repData=inter.getRepresentationData(5);
+		Text writeResult=new Text();
+		for(int index=0;index<repData.size();index++)
+		{
+			writeResult=new Text();
+			String output=convertRepDatatoString(repData.get(index));
+			writeResult.set(output);
+			context.write(_key, writeResult);
 		}
 	}
-
+	private String convertRepDatatoString(double[] repData)
+	{
+		String result="";
+		for(int index=0;index<repData.length;index++)
+		{
+			result+=new Double(repData[index]).toString();
+			result+=" ";
+		}
+		System.out.println(result);
+		return result;
+	}
 }
