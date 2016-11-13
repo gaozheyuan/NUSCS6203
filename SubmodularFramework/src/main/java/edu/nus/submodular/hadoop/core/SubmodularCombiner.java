@@ -6,8 +6,7 @@ import java.util.ArrayList;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
-import edu.nus.submodular.algorithm.abs.InterfaceAlgo;
-import edu.nus.submodular.algorithm.impl.KMeans;
+import edu.nus.submodular.clustering.algorithm.impl.KMeans;
 
 public class SubmodularCombiner extends Reducer<Text, Text, Text, Text> {
 	KMeans inter=new KMeans();

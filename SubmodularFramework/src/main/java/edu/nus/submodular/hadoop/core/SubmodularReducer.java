@@ -2,12 +2,9 @@ package edu.nus.submodular.hadoop.core;
 
 import java.io.IOException;
 import java.util.ArrayList;
-
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
-
-import edu.nus.submodular.algorithm.impl.KMeans;
-
+import edu.nus.submodular.clustering.algorithm.impl.KMeans;
 public class SubmodularReducer extends Reducer<Text, Text, Text, Text> {
 	KMeans inter=new KMeans();
 	public void reduce(Text _key, Iterable<Text> values, Context context)

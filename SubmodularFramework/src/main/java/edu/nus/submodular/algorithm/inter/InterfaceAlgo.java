@@ -1,4 +1,4 @@
-package edu.nus.submodular.algorithm.abs;
+package edu.nus.submodular.algorithm.inter;
 
 import java.util.ArrayList;
 

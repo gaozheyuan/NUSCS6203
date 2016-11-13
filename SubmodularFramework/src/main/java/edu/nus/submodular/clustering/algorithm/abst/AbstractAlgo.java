@@ -1,4 +1,4 @@
-package edu.nus.submodular.algorithm.abs;
+package edu.nus.submodular.clustering.algorithm.abst;
 
 import java.util.ArrayList;
 

@@ -1,7 +1,7 @@
-package edu.nus.submodular.algorithm.impl;
+package edu.nus.submodular.clustering.algorithm.impl;
 import java.util.ArrayList;
-import edu.nus.submodular.algorithm.abs.AbstractAlgo;
-import edu.nus.submodular.algorithm.abs.InterfaceAlgo;
+import edu.nus.submodular.algorithm.inter.InterfaceAlgo;
+import edu.nus.submodular.clustering.algorithm.abst.AbstractAlgo;
 
 public class KMeans extends AbstractAlgo implements InterfaceAlgo{
 	public KMeans()
