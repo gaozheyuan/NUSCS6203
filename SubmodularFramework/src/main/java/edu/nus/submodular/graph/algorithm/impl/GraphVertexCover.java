@@ -1,4 +1,8 @@
 package edu.nus.submodular.graph.algorithm.impl;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -16,7 +20,7 @@ public class GraphVertexCover {
 	}
 	public void addGraphData(String line)
 	{
-		String[] vertex=line.split(" ");		
+		String[] vertex=line.split(" |\\t");		
 		for(int i=0;i<vertex.length;i++)
 		{
 			if(!graph.containsVertex(vertex[i]))
@@ -49,7 +53,7 @@ public class GraphVertexCover {
 		{
 			String srcNode=vertexIter.next();   //check the source node
 			int benefit=0;  //calculate the benefit
-			if(!resultVertex.contains(srcNode)) 
+			if(!resultVertex.contains(srcNode)&&!coveredVertex.contains(srcNode)) 
 			{
 				Set<DefaultEdge> outEdge=graph.outgoingEdgesOf(srcNode); //get all edges out from
 				Iterator<DefaultEdge> edgeIter=outEdge.iterator(); //iterator of the edges.
@@ -62,11 +66,11 @@ public class GraphVertexCover {
 						benefit++;	
 					}
 				}
-			}
-			if(benefit>maximumBenefit)
-			{
-				maximumBenefit=benefit;
-				selectNode=srcNode;
+				if(benefit>maximumBenefit)
+				{
+					maximumBenefit=benefit;
+					selectNode=srcNode;
+				}
 			}
 		}
 		if(maximumBenefit==-1)
@@ -74,6 +78,7 @@ public class GraphVertexCover {
 		else
 		{
 			resultVertex.add(selectNode);
+			System.out.println(selectNode);
 			Set<DefaultEdge> outEdges=graph.outgoingEdgesOf(selectNode);
 			Iterator<DefaultEdge> edgeIter=outEdges.iterator();
 			while(edgeIter.hasNext())
@@ -83,6 +88,35 @@ public class GraphVertexCover {
 				coveredVertex.add(destNode);
 			}
 			return true;
+		}
+	}
+	public void outputResult()
+	{
+		Iterator<String> resultIter=resultVertex.iterator();
+		while(resultIter.hasNext())
+		{
+			System.out.println(resultIter.next());
+		}
+	}
+	public static void main(String[] args)
+	{
+		GraphVertexCover vc=new GraphVertexCover();
+		try {
+			BufferedReader br = new BufferedReader(new FileReader("file.txt"));
+			String line=br.readLine();
+			while(line!=null)
+			{
+				vc.addGraphData(line);
+				line=br.readLine();
+			}
+			vc.computeResult();
+			vc.outputResult();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 }
