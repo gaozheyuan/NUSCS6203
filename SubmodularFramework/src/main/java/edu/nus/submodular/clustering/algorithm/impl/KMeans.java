@@ -1,9 +1,15 @@
 package edu.nus.submodular.clustering.algorithm.impl;
+import java.io.IOException;
 import java.util.ArrayList;
-import edu.nus.submodular.algorithm.inter.InterfaceAlgo;
-import edu.nus.submodular.clustering.algorithm.abst.AbstractAlgo;
 
-public class KMeans extends AbstractAlgo implements InterfaceAlgo{
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Mapper.Context;
+
+import edu.nus.submodular.clustering.algorithm.abst.AbstractAlgo;
+import edu.nus.submodular.datainterface.DataInterface;
+
+public class KMeans extends AbstractAlgo implements DataInterface{
 	public KMeans()
 	{
 		dataset=new ArrayList<double[]>();
@@ -86,5 +92,76 @@ public class KMeans extends AbstractAlgo implements InterfaceAlgo{
 
 	public void loadData(String fileName) {
 		
+	}
+	private String convertRepDatatoString(double[] repData)
+	{
+		String result="";
+		for(int index=0;index<repData.length;index++)
+		{
+			result.concat(new Double(repData[index]).toString());
+			result.concat(" ");
+		}
+		return result;
+	}
+	public void mapData(LongWritable ikey, Text ivalue, org.apache.hadoop.mapreduce.Mapper.Context context) {
+		// TODO Auto-generated method stub
+		Text texKey = new Text();
+		texKey.set("1");
+		System.out.println(ivalue.toString());
+		try {
+			context.write(texKey, ivalue);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	public void combineData(Text _key, Iterable<Text> values, org.apache.hadoop.mapreduce.Reducer.Context  context) throws IOException, InterruptedException {
+		int numOfFeatures=0;
+		for (Text val : values) {
+			String[] strFeatures=val.toString().split(" ");
+			numOfFeatures=strFeatures.length;
+			double[] feature=new double[numOfFeatures];
+			for(int indexFeature=0;indexFeature<numOfFeatures;indexFeature++)
+			{
+				feature[indexFeature]=Double.parseDouble(strFeatures[indexFeature]);
+			}
+			this.getDataset().add(feature);
+		}
+		ArrayList<double[]> repData=getRepresentationData(5);
+		Text writeResult=new Text();
+		for(int index=0;index<repData.size();index++)
+		{
+			writeResult=new Text();
+			String output=convertRepDatatoString(repData.get(index));
+			writeResult.set(output);
+			context.write(_key, writeResult);
+		}
+		
+	}
+	public void reduceData(Text _key, Iterable<Text> values, org.apache.hadoop.mapreduce.Reducer.Context context) throws IOException, InterruptedException {
+		// TODO Auto-generated method stub
+		int numOfFeatures=0;
+		for (Text val : values) {
+			String[] strFeatures=val.toString().split(" ");
+			numOfFeatures=strFeatures.length;
+			double[] feature=new double[numOfFeatures];
+			for(int indexFeature=0;indexFeature<numOfFeatures;indexFeature++)
+			{
+				feature[indexFeature]=Double.parseDouble(strFeatures[indexFeature]);
+			}
+			getDataset().add(feature);
+		}
+		ArrayList<double[]> repData=getRepresentationData(5);
+		Text writeResult=new Text();
+		for(int index=0;index<repData.size();index++)
+		{
+			writeResult=new Text();
+			String output=convertRepDatatoString(repData.get(index));
+			writeResult.set(output);
+			context.write(_key, writeResult);
+		}
 	}
 }

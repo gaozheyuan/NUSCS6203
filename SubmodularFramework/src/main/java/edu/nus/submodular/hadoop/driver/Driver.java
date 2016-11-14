@@ -1,13 +1,5 @@
 package edu.nus.submodular.hadoop.driver;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.LineNumberReader;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -17,20 +9,27 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
-public class SubmodularDriver {
-	
+public class Driver {
+
 	public static void main(String[] args) throws Exception {
-	
 		Configuration conf = new Configuration();
 		Job job = Job.getInstance(conf, "JobName");
-		job.setJarByClass(edu.nus.submodular.hadoop.driver.SubmodularDriver.class);
-		job.setMapperClass(SubmodularClusterMapper.class);
+		job.setJarByClass(edu.nus.submodular.hadoop.driver.Driver.class);
+		// TODO: specify a mapper
+		job.setMapperClass(Mapper.class);
+		// TODO: specify a reducer
 		job.setReducerClass(Reducer.class);
+
+		// TODO: specify output types
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
-		FileInputFormat.setInputPaths(job, new Path(args[0]));
-		FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+		// TODO: specify input and output DIRECTORIES (not files)
+		FileInputFormat.setInputPaths(job, new Path("src"));
+		FileOutputFormat.setOutputPath(job, new Path("out"));
+
 		if (!job.waitForCompletion(true))
 			return;
 	}
+
 }
