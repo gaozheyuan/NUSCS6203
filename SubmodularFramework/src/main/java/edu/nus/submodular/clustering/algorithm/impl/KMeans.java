@@ -33,7 +33,6 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 		{
 			totalError+=calculateTwoElementsError(dataset.get(index),dataset.get(labels[index]));
 		}
-		System.out.println("Total error "+totalError);
 		return totalError;
 	}
 	
@@ -98,8 +97,8 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 		String result="";
 		for(int index=0;index<repData.length;index++)
 		{
-			result.concat(new Double(repData[index]).toString());
-			result.concat(" ");
+			result+=new Double(repData[index]).toString();
+			result+=" ";
 		}
 		return result;
 	}
@@ -107,7 +106,6 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 		// TODO Auto-generated method stub
 		Text texKey = new Text();
 		texKey.set("1");
-		System.out.println(ivalue.toString());
 		try {
 			context.write(texKey, ivalue);
 		} catch (IOException e) {
@@ -154,7 +152,7 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 			}
 			getDataset().add(feature);
 		}
-		ArrayList<double[]> repData=getRepresentationData(5);
+		ArrayList<double[]> repData=getRepresentationData(3);
 		Text writeResult=new Text();
 		for(int index=0;index<repData.size();index++)
 		{

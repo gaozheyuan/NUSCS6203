@@ -17,6 +17,10 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
+import edu.nus.submodular.hadoop.core.SubmodularClusterCombiner;
+import edu.nus.submodular.hadoop.core.SubmodularClusterMapper;
+import edu.nus.submodular.hadoop.core.SubmodularClusterReducer;
+
 public class SubmodularDriver {
 	
 	public static void main(String[] args) throws Exception {
@@ -25,7 +29,8 @@ public class SubmodularDriver {
 		Job job = Job.getInstance(conf, "JobName");
 		job.setJarByClass(edu.nus.submodular.hadoop.driver.SubmodularDriver.class);
 		job.setMapperClass(SubmodularClusterMapper.class);
-		job.setReducerClass(Reducer.class);
+		job.setCombinerClass(SubmodularClusterCombiner.class);
+		job.setReducerClass(SubmodularClusterReducer.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
 		FileInputFormat.setInputPaths(job, new Path(args[0]));

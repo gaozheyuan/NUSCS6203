@@ -5,6 +5,9 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
+import edu.nus.submodular.clustering.algorithm.impl.KMeans;
+import edu.nus.submodular.datainterface.DataInterface;
+
 public class SubmodularClusterMapper extends Mapper<LongWritable, Text, Text, Text> {
 	DataInterface inter=new KMeans();
 	public SubmodularClusterMapper()
