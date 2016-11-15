@@ -129,6 +129,7 @@ public class GraphEdgeCover implements DataInterface{
 		Text texKey = new Text();
 		texKey.set("1");
 		try {
+			System.out.println(ivalue);
 			context.write(texKey, ivalue);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -140,7 +141,7 @@ public class GraphEdgeCover implements DataInterface{
 	}
 	public void combineData(Text _key, Iterable<Text> values,
 			org.apache.hadoop.mapreduce.Reducer.Context context)
-			throws IOException, InterruptedException {
+			{
 		for(Text data:values)
 		{
 			String[] vertex=data.toString().split(" |\\t");		
@@ -158,12 +159,42 @@ public class GraphEdgeCover implements DataInterface{
 			};
 		}
 		computeResult();
-		outputResult();
+		Iterator<String> resultIter=resultVertex.iterator();
+		while(resultIter.hasNext())
+		{
+			System.out.println("size"+resultVertex.size());
+			String result=resultIter.next();
+			System.out.println("key "+_key+"result "+result);
+			Text txt_result=new Text();
+			txt_result.set(result);
+			System.out.println(context);
+			try {
+				context.write(_key, txt_result);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			System.out.println("size"+resultVertex.size());
+		}
 	}
 	public void reduceData(Text _key, Iterable<Text> values,
-			org.apache.hadoop.mapreduce.Reducer.Context context)
-			throws IOException, InterruptedException {
+			org.apache.hadoop.mapreduce.Reducer.Context context){
 		// TODO Auto-generated method stub
-		
+		for(Text data:values)
+		{
+			System.out.println(data.toString());
+			try {
+				context.write(_key,data);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 }

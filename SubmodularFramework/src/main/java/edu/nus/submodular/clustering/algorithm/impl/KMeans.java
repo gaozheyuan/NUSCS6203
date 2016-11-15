@@ -116,7 +116,7 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 			e.printStackTrace();
 		}
 	}
-	public void combineData(Text _key, Iterable<Text> values, org.apache.hadoop.mapreduce.Reducer.Context  context) throws IOException, InterruptedException {
+	public void combineData(Text _key, Iterable<Text> values, org.apache.hadoop.mapreduce.Reducer.Context  context){
 		int numOfFeatures=0;
 		for (Text val : values) {
 			String[] strFeatures=val.toString().split(" ");
@@ -135,11 +135,19 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 			writeResult=new Text();
 			String output=convertRepDatatoString(repData.get(index));
 			writeResult.set(output);
-			context.write(_key, writeResult);
+			try {
+				context.write(_key, writeResult);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		
 	}
-	public void reduceData(Text _key, Iterable<Text> values, org.apache.hadoop.mapreduce.Reducer.Context context) throws IOException, InterruptedException {
+	public void reduceData(Text _key, Iterable<Text> values, org.apache.hadoop.mapreduce.Reducer.Context context) {
 		// TODO Auto-generated method stub
 		int numOfFeatures=0;
 		for (Text val : values) {
@@ -159,7 +167,15 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 			writeResult=new Text();
 			String output=convertRepDatatoString(repData.get(index));
 			writeResult.set(output);
-			context.write(_key, writeResult);
+			try {
+				context.write(_key, writeResult);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 }
