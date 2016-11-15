@@ -15,21 +15,23 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.jgrapht.DirectedGraph;
+import org.jgrapht.UndirectedGraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.SimpleGraph;
 
 import edu.nus.submodular.datainterface.DataInterface;
 import edu.nus.submodular.hadoop.core.SubmodularReducer;
 import edu.nus.submodular.macros.Macros;
 
 public class DistributedVertexCover implements DataInterface{
-	public Set<DefaultEdge> coveredEdge = new HashSet<DefaultEdge>();
+	public Set<String> coveredVertex = new HashSet<String>();
 	public Set<String> resultVertex = new HashSet<String>();
-	DirectedGraph<String, DefaultEdge> graph;
+	UndirectedGraph<String, DefaultEdge> graph;
 	public int numOfElements;
 	public DistributedVertexCover()
 	{
-		graph=new DefaultDirectedGraph<String, DefaultEdge>(DefaultEdge.class);
+		graph=new SimpleGraph<String, DefaultEdge>(DefaultEdge.class);
 	}
 	public void addGraphData(String line)
 	{
@@ -66,18 +68,29 @@ public class DistributedVertexCover implements DataInterface{
 		{
 			String srcNode=vertexIter.next();   //check the source node
 			int benefit=-1;  //calculate the benefit
-			if(!resultVertex.contains(srcNode)) 
+			if(!resultVertex.contains(srcNode)&&!coveredVertex.contains(srcNode)) 
 			{
-				Set<DefaultEdge> outEdge=graph.outgoingEdgesOf(srcNode); //get all edges out from
+				benefit=1;
+				Set<DefaultEdge> outEdge=graph.edgesOf(srcNode); //get all edges out from
 				Iterator<DefaultEdge> edgeIter=outEdge.iterator(); //iterator of the edges.
 				while(edgeIter.hasNext())
 				{
-					DefaultEdge currentEdge=edgeIter.next();  //get the current edge\
-					String destNode=graph.getEdgeTarget(currentEdge);
-					DefaultEdge reverseCurrentEdge=graph.getEdge(destNode, srcNode);
-					if(!(coveredEdge.contains(currentEdge))&&!(coveredEdge.contains(reverseCurrentEdge)))					
-					{									
-						benefit++;	
+					DefaultEdge currentEdge=edgeIter.next();  //get the current edge
+					String node1=graph.getEdgeTarget(currentEdge); //get the destination node
+					String node2=graph.getEdgeSource(currentEdge);
+					if(!node1.equals(srcNode))
+					{
+						if(!(coveredVertex.contains(node1))&&!(resultVertex.contains(node1)))					
+						{									
+							benefit++;	
+						}
+					}
+					else
+					{
+						if(!(coveredVertex.contains(node2))&&!(resultVertex.contains(node2)))					
+						{									
+							benefit++;	
+						}
 					}
 				}
 				if(benefit>maximumBenefit)
@@ -92,12 +105,16 @@ public class DistributedVertexCover implements DataInterface{
 		else
 		{
 			resultVertex.add(selectNode);
-			Set<DefaultEdge> outEdges=graph.outgoingEdgesOf(selectNode);
+			System.out.println(selectNode);
+			Set<DefaultEdge> outEdges=graph.edgesOf(selectNode);
 			Iterator<DefaultEdge> edgeIter=outEdges.iterator();
 			while(edgeIter.hasNext())
 			{
 				DefaultEdge currentEdge=edgeIter.next();
-				coveredEdge.add(currentEdge);
+				String destNode=graph.getEdgeTarget(currentEdge);	
+				String srcNode=graph.getEdgeSource(currentEdge);
+				coveredVertex.add(srcNode);
+				coveredVertex.add(destNode);
 			}
 			return true;
 		}
@@ -142,30 +159,20 @@ public class DistributedVertexCover implements DataInterface{
 						graph.addEdge(vertex[0], vertex[i]);
 				}
 			};
-		}
+		}		
 		int numOfElement=context.getConfiguration().getInt(Macros.STRINGELEMENT, -1);
 		computeResult(numOfElement);
 		Iterator<String> resultIter=resultVertex.iterator();
-		String writeString="";
 		while(resultIter.hasNext())
 		{
-			String sourceNode=resultIter.next();
-			writeString=writeString+sourceNode+" ";
-			Set<DefaultEdge> edges=graph.outgoingEdgesOf(sourceNode);
-			Iterator<DefaultEdge> edgeIter=edges.iterator();
-			while(edgeIter.hasNext())
-			{
-				DefaultEdge edge=edgeIter.next();
-				String targetNode=graph.getEdgeTarget(edge);
-				writeString=writeString+targetNode+" ";
-			}
-			System.out.println(writeString);
-			Text key=new Text();
-			key.set("1");
-			Text textresult=new Text();
-			textresult.set(writeString);
+			System.out.println("size"+resultVertex.size());
+			String result=resultIter.next();
+			System.out.println("key "+_key+"result "+result);
+			Text txt_result=new Text();
+			txt_result.set(result);
+			System.out.println(context);
 			try {
-				context.write(key, textresult);
+				context.write(_key, txt_result);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -173,6 +180,7 @@ public class DistributedVertexCover implements DataInterface{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			System.out.println("size"+resultVertex.size());
 		}
 	}
 	public void reduceData(Text _key, Iterable<Text> values,

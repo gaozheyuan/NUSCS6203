@@ -13,7 +13,7 @@ import edu.nus.submodular.graph.algorithm.impl.GraphEdgeCover;
 import edu.nus.submodular.graph.algorithm.impl.GraphVertexCover;
 
 public class SubmodularMapper extends Mapper<LongWritable, Text, Text, Text> {
-	DataInterface inter=new DistributedEdgeCover();
+	DataInterface inter=new DistributedVertexCover();
 	public SubmodularMapper()
 	{
 		System.out.print("mapper created!");

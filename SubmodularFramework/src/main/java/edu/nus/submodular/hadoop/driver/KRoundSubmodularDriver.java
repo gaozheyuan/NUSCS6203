@@ -21,7 +21,7 @@ import edu.nus.submodular.macros.Macros;
 public class KRoundSubmodularDriver {
 
 	public static void main(String[] args) throws Exception {
-		int numOfElements=1;
+		int numOfElements=2;
 		while(true)
 		{
 			Configuration conf = new Configuration();
@@ -37,6 +37,7 @@ public class KRoundSubmodularDriver {
 			FileOutputFormat.setOutputPath(job, new Path(args[1]));
 			if (!job.waitForCompletion(true))
 				return;
+			break;
 		/*	Path pt=new Path(Macros.RECORDFILE);
 			FileSystem fs = FileSystem.get(new Configuration());
             BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(pt)));

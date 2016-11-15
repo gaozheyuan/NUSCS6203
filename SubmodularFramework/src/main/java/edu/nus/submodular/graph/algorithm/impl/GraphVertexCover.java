@@ -13,16 +13,17 @@ import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.jgrapht.*;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.SimpleGraph;
 
 import edu.nus.submodular.datainterface.DataInterface;
 import edu.nus.submodular.macros.Macros;
 public class GraphVertexCover implements DataInterface{
 	public Set<String> coveredVertex = new HashSet<String>();
 	public Set<String> resultVertex = new HashSet<String>();
-	DirectedGraph<String, DefaultEdge> graph;
+	UndirectedGraph<String, DefaultEdge> graph;
 	public GraphVertexCover()
 	{
-		graph=new DefaultDirectedGraph<String, DefaultEdge>(DefaultEdge.class);
+		graph=new SimpleGraph<String, DefaultEdge>(DefaultEdge.class);
 	}
 	public void addGraphData(String line)
 	{
@@ -58,18 +59,30 @@ public class GraphVertexCover implements DataInterface{
 		while(vertexIter.hasNext())
 		{
 			String srcNode=vertexIter.next();   //check the source node
-			int benefit=0;  //calculate the benefit
+			int benefit=-1;  //calculate the benefit
 			if(!resultVertex.contains(srcNode)&&!coveredVertex.contains(srcNode)) 
 			{
-				Set<DefaultEdge> outEdge=graph.outgoingEdgesOf(srcNode); //get all edges out from
+				benefit=1;
+				Set<DefaultEdge> outEdge=graph.edgesOf(srcNode); //get all edges out from
 				Iterator<DefaultEdge> edgeIter=outEdge.iterator(); //iterator of the edges.
 				while(edgeIter.hasNext())
 				{
 					DefaultEdge currentEdge=edgeIter.next();  //get the current edge
-					String destNode=graph.getEdgeTarget(currentEdge); //get the destination node					
-					if(!(coveredVertex.contains(destNode))&&!(resultVertex.contains(destNode)))					
-					{									
-						benefit++;	
+					String node1=graph.getEdgeTarget(currentEdge); //get the destination node
+					String node2=graph.getEdgeSource(currentEdge);
+					if(!node1.equals(srcNode))
+					{
+						if(!(coveredVertex.contains(node1))&&!(resultVertex.contains(node1)))					
+						{									
+							benefit++;	
+						}
+					}
+					else
+					{
+						if(!(coveredVertex.contains(node2))&&!(resultVertex.contains(node2)))					
+						{									
+							benefit++;	
+						}
 					}
 				}
 				if(benefit>maximumBenefit)
@@ -85,12 +98,14 @@ public class GraphVertexCover implements DataInterface{
 		{
 			resultVertex.add(selectNode);
 			System.out.println(selectNode);
-			Set<DefaultEdge> outEdges=graph.outgoingEdgesOf(selectNode);
+			Set<DefaultEdge> outEdges=graph.edgesOf(selectNode);
 			Iterator<DefaultEdge> edgeIter=outEdges.iterator();
 			while(edgeIter.hasNext())
 			{
 				DefaultEdge currentEdge=edgeIter.next();
 				String destNode=graph.getEdgeTarget(currentEdge);	
+				String srcNode=graph.getEdgeSource(currentEdge);
+				coveredVertex.add(srcNode);
 				coveredVertex.add(destNode);
 			}
 			return true;
@@ -136,7 +151,6 @@ public class GraphVertexCover implements DataInterface{
 				}
 			};
 		}
-		Integer numofElement=Integer.parseInt(context.getConfiguration().get(Macros.STRINGELEMENT));
 		computeResult();
 		Iterator<String> resultIter=resultVertex.iterator();
 		while(resultIter.hasNext())

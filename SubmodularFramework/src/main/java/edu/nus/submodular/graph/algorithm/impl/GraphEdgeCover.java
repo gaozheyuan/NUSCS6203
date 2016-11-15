@@ -12,18 +12,20 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.jgrapht.DirectedGraph;
+import org.jgrapht.UndirectedGraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.SimpleGraph;
 
 import edu.nus.submodular.datainterface.DataInterface;
 
 public class GraphEdgeCover implements DataInterface{
 	public Set<DefaultEdge> coveredEdge = new HashSet<DefaultEdge>();
 	public Set<String> resultVertex = new HashSet<String>();
-	DirectedGraph<String, DefaultEdge> graph;
+	UndirectedGraph<String, DefaultEdge> graph;
 	public GraphEdgeCover()
 	{
-		graph=new DefaultDirectedGraph<String, DefaultEdge>(DefaultEdge.class);
+		graph=new SimpleGraph<String, DefaultEdge>(DefaultEdge.class);
 	}
 	public void addGraphData(String line)
 	{
@@ -62,14 +64,12 @@ public class GraphEdgeCover implements DataInterface{
 			int benefit=-1;  //calculate the benefit
 			if(!resultVertex.contains(srcNode)) 
 			{
-				Set<DefaultEdge> outEdge=graph.outgoingEdgesOf(srcNode); //get all edges out from
+				Set<DefaultEdge> outEdge=graph.edgesOf(srcNode); //get all edges out from
 				Iterator<DefaultEdge> edgeIter=outEdge.iterator(); //iterator of the edges.
 				while(edgeIter.hasNext())
 				{
-					DefaultEdge currentEdge=edgeIter.next();  //get the current edge\
-					String destNode=graph.getEdgeTarget(currentEdge);
-					DefaultEdge reverseCurrentEdge=graph.getEdge(destNode, srcNode);
-					if(!(coveredEdge.contains(currentEdge))&&!(coveredEdge.contains(reverseCurrentEdge)))					
+					DefaultEdge currentEdge=edgeIter.next();  //get the current edge
+					if(!(coveredEdge.contains(currentEdge)))					
 					{									
 						benefit++;	
 					}
@@ -86,7 +86,7 @@ public class GraphEdgeCover implements DataInterface{
 		else
 		{
 			resultVertex.add(selectNode);
-			Set<DefaultEdge> outEdges=graph.outgoingEdgesOf(selectNode);
+			Set<DefaultEdge> outEdges=graph.edgesOf(selectNode);
 			Iterator<DefaultEdge> edgeIter=outEdges.iterator();
 			while(edgeIter.hasNext())
 			{

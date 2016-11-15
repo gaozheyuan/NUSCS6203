@@ -12,8 +12,10 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.jgrapht.DirectedGraph;
+import org.jgrapht.UndirectedGraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.SimpleGraph;
 
 import edu.nus.submodular.datainterface.DataInterface;
 import edu.nus.submodular.macros.Macros;
@@ -21,10 +23,10 @@ import edu.nus.submodular.macros.Macros;
 public class DistributedEdgeCover implements DataInterface{
 	public Set<DefaultEdge> coveredEdge = new HashSet<DefaultEdge>();
 	public Set<String> resultVertex = new HashSet<String>();
-	DirectedGraph<String, DefaultEdge> graph;
+	UndirectedGraph<String, DefaultEdge> graph;
 	public DistributedEdgeCover()
 	{
-		graph=new DefaultDirectedGraph<String, DefaultEdge>(DefaultEdge.class);
+		graph=new SimpleGraph<String, DefaultEdge>(DefaultEdge.class);
 	}
 	public void addGraphData(String line)
 	{
@@ -65,14 +67,13 @@ public class DistributedEdgeCover implements DataInterface{
 			int benefit=-1;  //calculate the benefit
 			if(!resultVertex.contains(srcNode)) 
 			{
-				Set<DefaultEdge> outEdge=graph.outgoingEdgesOf(srcNode); //get all edges out from
+				benefit=0;
+				Set<DefaultEdge> outEdge=graph.edgesOf(srcNode); //get all edges out from
 				Iterator<DefaultEdge> edgeIter=outEdge.iterator(); //iterator of the edges.
 				while(edgeIter.hasNext())
 				{
-					DefaultEdge currentEdge=edgeIter.next();  //get the current edge\
-					String destNode=graph.getEdgeTarget(currentEdge);
-					DefaultEdge reverseCurrentEdge=graph.getEdge(destNode, srcNode);
-					if(!(coveredEdge.contains(currentEdge))&&!(coveredEdge.contains(reverseCurrentEdge)))					
+					DefaultEdge currentEdge=edgeIter.next();  
+					if(!(coveredEdge.contains(currentEdge)))					
 					{									
 						benefit++;	
 					}
@@ -89,7 +90,7 @@ public class DistributedEdgeCover implements DataInterface{
 		else
 		{
 			resultVertex.add(selectNode);
-			Set<DefaultEdge> outEdges=graph.outgoingEdgesOf(selectNode);
+			Set<DefaultEdge> outEdges=graph.edgesOf(selectNode);
 			Iterator<DefaultEdge> edgeIter=outEdges.iterator();
 			while(edgeIter.hasNext())
 			{
@@ -111,7 +112,6 @@ public class DistributedEdgeCover implements DataInterface{
 		Text texKey = new Text();
 		texKey.set("1");
 		try {
-			System.out.println(ivalue);
 			context.write(texKey, ivalue);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -143,26 +143,16 @@ public class DistributedEdgeCover implements DataInterface{
 		int numOfElement=context.getConfiguration().getInt(Macros.STRINGELEMENT, -1);
 		computeResult(numOfElement);
 		Iterator<String> resultIter=resultVertex.iterator();
-		String writeString="";
 		while(resultIter.hasNext())
 		{
-			String sourceNode=resultIter.next();
-			writeString=writeString+sourceNode+" ";
-			Set<DefaultEdge> edges=graph.outgoingEdgesOf(sourceNode);
-			Iterator<DefaultEdge> edgeIter=edges.iterator();
-			while(edgeIter.hasNext())
-			{
-				DefaultEdge edge=edgeIter.next();
-				String targetNode=graph.getEdgeTarget(edge);
-				writeString=writeString+targetNode+" ";
-			}
-			System.out.println(writeString);
-			Text key=new Text();
-			key.set("1");
-			Text textresult=new Text();
-			textresult.set(writeString);
+			System.out.println("size"+resultVertex.size());
+			String result=resultIter.next();
+			System.out.println("key "+_key+"result "+result);
+			Text txt_result=new Text();
+			txt_result.set(result);
+			System.out.println(context);
 			try {
-				context.write(key, textresult);
+				context.write(_key, txt_result);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -170,6 +160,7 @@ public class DistributedEdgeCover implements DataInterface{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			System.out.println("size"+resultVertex.size());
 		}
 	}
 	public void reduceData(Text _key, Iterable<Text> values,
@@ -177,7 +168,6 @@ public class DistributedEdgeCover implements DataInterface{
 		// TODO Auto-generated method stub
 		for(Text data:values)
 		{
-			System.out.println(data.toString());
 			try {
 				context.write(_key,data);
 			} catch (IOException e) {
