@@ -8,9 +8,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper.Context;
@@ -19,15 +16,13 @@ import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 
 import edu.nus.submodular.datainterface.DataInterface;
-import edu.nus.submodular.hadoop.core.SubmodularReducer;
 import edu.nus.submodular.macros.Macros;
 
-public class DistributedVertexCover implements DataInterface{
+public class DistributedEdgeCover implements DataInterface{
 	public Set<DefaultEdge> coveredEdge = new HashSet<DefaultEdge>();
 	public Set<String> resultVertex = new HashSet<String>();
 	DirectedGraph<String, DefaultEdge> graph;
-	public int numOfElements;
-	public DistributedVertexCover()
+	public DistributedEdgeCover()
 	{
 		graph=new DefaultDirectedGraph<String, DefaultEdge>(DefaultEdge.class);
 	}
@@ -47,6 +42,7 @@ public class DistributedVertexCover implements DataInterface{
 			}
 		};
 	}
+	
 	public void computeResult(int numOfElement)
 	{
 		for(int index=0;index<numOfElement;index++)
@@ -56,6 +52,7 @@ public class DistributedVertexCover implements DataInterface{
 				break;
 		}
 	}
+	
 	public boolean chooseBestOne()
 	{
 		Set<String> vertexset=graph.vertexSet();  //All the vertex in grpah
@@ -111,10 +108,10 @@ public class DistributedVertexCover implements DataInterface{
 		}
 	}
 	public void mapData(LongWritable ikey, Text ivalue, Context context) {
-		// TODO Auto-generated method stub
 		Text texKey = new Text();
 		texKey.set("1");
 		try {
+			System.out.println(ivalue);
 			context.write(texKey, ivalue);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -125,8 +122,8 @@ public class DistributedVertexCover implements DataInterface{
 		}
 	}
 	public void combineData(Text _key, Iterable<Text> values,
-			org.apache.hadoop.mapreduce.Reducer.Context context) {
-		// TODO Auto-generated method stub
+			org.apache.hadoop.mapreduce.Reducer.Context context)
+			{
 		for(Text data:values)
 		{
 			String[] vertex=data.toString().split(" |\\t");		
@@ -176,19 +173,13 @@ public class DistributedVertexCover implements DataInterface{
 		}
 	}
 	public void reduceData(Text _key, Iterable<Text> values,
-			org.apache.hadoop.mapreduce.Reducer.Context context) {
+			org.apache.hadoop.mapreduce.Reducer.Context context){
 		// TODO Auto-generated method stub
-		Path pt=new Path(Macros.RECORDFILE);
-		try {
-			FileSystem fs = FileSystem.get(new Configuration());
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
 		for(Text data:values)
 		{
+			System.out.println(data.toString());
 			try {
-				context.write(_key, data);
+				context.write(_key,data);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

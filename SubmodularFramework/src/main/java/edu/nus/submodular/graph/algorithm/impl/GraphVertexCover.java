@@ -15,6 +15,7 @@ import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 
 import edu.nus.submodular.datainterface.DataInterface;
+import edu.nus.submodular.macros.Macros;
 public class GraphVertexCover implements DataInterface{
 	public Set<String> coveredVertex = new HashSet<String>();
 	public Set<String> resultVertex = new HashSet<String>();
@@ -103,27 +104,6 @@ public class GraphVertexCover implements DataInterface{
 			System.out.println(resultIter.next());
 		}
 	}
-	public static void main(String[] args)
-	{
-		GraphVertexCover vc=new GraphVertexCover();
-		try {
-			BufferedReader br = new BufferedReader(new FileReader("file.txt"));
-			String line=br.readLine();
-			while(line!=null)
-			{
-				vc.addGraphData(line);
-				line=br.readLine();
-			}
-			vc.computeResult();
-			vc.outputResult();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
 	public void mapData(LongWritable ikey, Text ivalue, Context context) {
 		// TODO Auto-generated method stub
 		Text texKey = new Text();
@@ -156,6 +136,7 @@ public class GraphVertexCover implements DataInterface{
 				}
 			};
 		}
+		Integer numofElement=Integer.parseInt(context.getConfiguration().get(Macros.STRINGELEMENT));
 		computeResult();
 		Iterator<String> resultIter=resultVertex.iterator();
 		while(resultIter.hasNext())
@@ -184,7 +165,7 @@ public class GraphVertexCover implements DataInterface{
 		for(Text data:values)
 		{
 			try {
-				context.write(_key, data.toString());
+				context.write(_key, data);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

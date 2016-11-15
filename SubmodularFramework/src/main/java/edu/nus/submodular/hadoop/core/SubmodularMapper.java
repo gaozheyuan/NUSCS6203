@@ -7,11 +7,13 @@ import org.apache.hadoop.mapreduce.Mapper;
 
 import edu.nus.submodular.clustering.algorithm.impl.KMeans;
 import edu.nus.submodular.datainterface.DataInterface;
+import edu.nus.submodular.graph.algorithm.impl.DistributedEdgeCover;
+import edu.nus.submodular.graph.algorithm.impl.DistributedVertexCover;
 import edu.nus.submodular.graph.algorithm.impl.GraphEdgeCover;
 import edu.nus.submodular.graph.algorithm.impl.GraphVertexCover;
 
 public class SubmodularMapper extends Mapper<LongWritable, Text, Text, Text> {
-	DataInterface inter=new GraphVertexCover();
+	DataInterface inter=new DistributedEdgeCover();
 	public SubmodularMapper()
 	{
 		System.out.print("mapper created!");
