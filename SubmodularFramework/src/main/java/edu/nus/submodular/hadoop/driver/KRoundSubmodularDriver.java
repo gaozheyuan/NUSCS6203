@@ -21,11 +21,18 @@ import edu.nus.submodular.macros.Macros;
 public class KRoundSubmodularDriver {
 
 	public static void main(String[] args) throws Exception {
-		int numOfElements=2;
-		while(true)
+		int numOfElements=1;
+		double targetResult=Double.MAX_VALUE,roundResult=0;
+		int round=0;
+		while(roundResult<targetResult)
 		{
+			if(round==1)
+				numOfElements=1;
 			Configuration conf = new Configuration();
-			conf.setInt(Macros.STRINGELEMENT,numOfElements);
+			conf.setInt(Macros.NUMOFELEMENT,numOfElements);
+			conf.setDouble(Macros.ALPHA, 0.5);
+			conf.setDouble(Macros.LAMDA, 0.1);
+			conf.setDouble(Macros.CONSTRAINT, targetResult);
 			Job job = Job.getInstance(conf, "JobName");
 			job.setJarByClass(edu.nus.submodular.hadoop.driver.SubmodularDriver.class);
 			job.setMapperClass(SubmodularMapper.class);
@@ -35,14 +42,23 @@ public class KRoundSubmodularDriver {
 			job.setOutputValueClass(Text.class);
 			FileInputFormat.setInputPaths(job, new Path(args[0]));
 			FileOutputFormat.setOutputPath(job, new Path(args[1]));
+			FileSystem  hdfs = FileSystem.get(conf);
+			if(hdfs.exists(new Path(args[1])))
+				hdfs.delete(new Path(args[1]),true);
 			if (!job.waitForCompletion(true))
 				return;
-			break;
-		/*	Path pt=new Path(Macros.RECORDFILE);
-			FileSystem fs = FileSystem.get(new Configuration());
-            BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(pt)));
-            String line;
-            line=br.readLine();*/
+			FileSystem fs = FileSystem.get(conf);
+			Path pt=new Path(Macros.TARGETRESULTFILE);
+            BufferedReader br1=new BufferedReader(new InputStreamReader(fs.open(pt)));
+            String strTargetResult=br1.readLine();
+            targetResult=Double.parseDouble(strTargetResult);          
+            pt=new Path(Macros.ROUNDRESULTFILE);
+            br1=new BufferedReader(new InputStreamReader(fs.open(pt)));
+            String strRoundResult=br1.readLine();
+            roundResult=Double.parseDouble(strRoundResult);
+            round++;
+            numOfElements++;
+            System.out.println(round);
 		}
 	}
 }

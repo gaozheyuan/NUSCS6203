@@ -8,6 +8,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper.Context;
@@ -110,7 +114,7 @@ public class DistributedEdgeCover implements DataInterface{
 	}
 	public void mapData(LongWritable ikey, Text ivalue, Context context) {
 		Text texKey = new Text();
-		texKey.set("1");
+		texKey.set(Macros.MAPKEY);
 		try {
 			context.write(texKey, ivalue);
 		} catch (IOException e) {
@@ -122,11 +126,22 @@ public class DistributedEdgeCover implements DataInterface{
 		}
 	}
 	public void combineData(Text _key, Iterable<Text> values,
-			org.apache.hadoop.mapreduce.Reducer.Context context)
-			{
+			org.apache.hadoop.mapreduce.Reducer.Context context)		
+	{
+		Text textOriginalKey=new Text();
+		textOriginalKey.set(Macros.KEYORIGINAL);
 		for(Text data:values)
 		{
-			String[] vertex=data.toString().split(" |\\t");		
+			try {
+				context.write(textOriginalKey, data);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			String[] vertex=data.toString().split(" |\\t");	
 			for(int i=0;i<vertex.length;i++)
 			{
 				if(!graph.containsVertex(vertex[i]))
@@ -140,19 +155,31 @@ public class DistributedEdgeCover implements DataInterface{
 				}
 			};
 		}
-		int numOfElement=context.getConfiguration().getInt(Macros.STRINGELEMENT, -1);
+		int numOfElement=context.getConfiguration().getInt(Macros.NUMOFELEMENT, -1);
 		computeResult(numOfElement);
 		Iterator<String> resultIter=resultVertex.iterator();
 		while(resultIter.hasNext())
 		{
-			System.out.println("size"+resultVertex.size());
 			String result=resultIter.next();
-			System.out.println("key "+_key+"result "+result);
-			Text txt_result=new Text();
-			txt_result.set(result);
-			System.out.println(context);
+			Set<DefaultEdge> connectedEdges=graph.edgesOf(result);
+			Iterator<DefaultEdge> edgeIter=connectedEdges.iterator();
+			String writeString=new String(result);
+			while(edgeIter.hasNext())
+			{
+				DefaultEdge edge=edgeIter.next();
+				String node1=graph.getEdgeSource(edge);
+				String node2=graph.getEdgeTarget(edge);
+				if(!node1.equals(result))
+					writeString=writeString+" "+node1;
+				else
+					writeString=writeString+" "+node2;  //combine the result together and output
+			}
 			try {
-				context.write(_key, txt_result);
+				Text txt_result=new Text();
+				txt_result.set(writeString);
+				Text key=new Text();
+				key.set(Macros.KEYRESULT);
+				context.write(key, txt_result);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -160,22 +187,86 @@ public class DistributedEdgeCover implements DataInterface{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			System.out.println("size"+resultVertex.size());
 		}
 	}
 	public void reduceData(Text _key, Iterable<Text> values,
 			org.apache.hadoop.mapreduce.Reducer.Context context){
 		// TODO Auto-generated method stub
-		for(Text data:values)
+		if(_key.toString().equals(Macros.KEYRESULT))
 		{
+			graph=new SimpleGraph<String, DefaultEdge>(DefaultEdge.class);
+			for(Text data:values)
+			{
+				String[] nodes=data.toString().split(" ");
+				for(int i=1;i<nodes.length;i++)
+				{
+					if(!graph.containsVertex(nodes[0]))
+						graph.addVertex(nodes[0]);
+					if(!graph.containsVertex(nodes[i]))
+						graph.addVertex(nodes[i]);
+					if(!graph.containsEdge(nodes[0], nodes[i]))
+						graph.addEdge(nodes[0], nodes[i]);
+				}
+			}
+			int numOfElement=context.getConfiguration().getInt(Macros.NUMOFELEMENT, -1);
+			computeResult(numOfElement);
+			Iterator<String> resultIter=resultVertex.iterator();
+			while(resultIter.hasNext())
+			{
+				String result=resultIter.next();
+				Text txt_result=new Text();
+				txt_result.set(result);
+				System.err.println(result);
+				try {
+					context.write(_key, txt_result);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 			try {
-				context.write(_key,data);
-			} catch (IOException e) {
+				FileSystem fs = FileSystem.get(context.getConfiguration());
+				Path pt=new Path(Macros.ROUNDRESULTFILE);
+				FSDataOutputStream out;
+				out = fs.create(pt);
+				out.writeBytes(new Integer(coveredEdge.size()).toString());
+				out.flush();
+				out.close();
+			} catch (IOException e1) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (InterruptedException e) {
+				e1.printStackTrace();
+			}
+		}
+		if(_key.toString().equals(Macros.KEYORIGINAL))
+		{
+			graph=new SimpleGraph<String, DefaultEdge>(DefaultEdge.class);
+			for(Text data:values)
+			{
+				String[] nodes=data.toString().split(" ");
+				for(int i=1;i<nodes.length;i++)
+				{
+					if(!graph.containsVertex(nodes[0]))
+						graph.addVertex(nodes[0]);
+					if(!graph.containsVertex(nodes[i]))
+						graph.addVertex(nodes[i]);
+					if(!graph.containsEdge(nodes[0], nodes[i]))
+						graph.addEdge(nodes[0], nodes[i]);
+				}
+			}
+			try {
+				FileSystem fs = FileSystem.get(context.getConfiguration());
+				Path pt=new Path(Macros.TARGETRESULTFILE);
+				FSDataOutputStream out;
+				out = fs.create(pt);
+				out.writeBytes(new Integer(graph.edgeSet().size()).toString());
+				out.flush();
+				out.close();
+			} catch (IOException e1) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				e1.printStackTrace();
 			}
 		}
 	}

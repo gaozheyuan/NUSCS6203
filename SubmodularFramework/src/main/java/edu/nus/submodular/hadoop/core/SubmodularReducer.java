@@ -12,7 +12,7 @@ import edu.nus.submodular.graph.algorithm.impl.DistributedVertexCover;
 import edu.nus.submodular.graph.algorithm.impl.GraphEdgeCover;
 import edu.nus.submodular.graph.algorithm.impl.GraphVertexCover;
 public class SubmodularReducer extends Reducer<Text, Text, Text, Text> {
-	DataInterface inter=new DistributedVertexCover();
+	DataInterface inter=new DistributedEdgeCover();
 	public SubmodularReducer()
 	{
 		System.out.println("Reducer created!");

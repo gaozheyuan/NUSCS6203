@@ -160,7 +160,7 @@ public class DistributedVertexCover implements DataInterface{
 				}
 			};
 		}		
-		int numOfElement=context.getConfiguration().getInt(Macros.STRINGELEMENT, -1);
+		int numOfElement=context.getConfiguration().getInt(Macros.NUMOFELEMENT, -1);
 		computeResult(numOfElement);
 		Iterator<String> resultIter=resultVertex.iterator();
 		while(resultIter.hasNext())
@@ -186,7 +186,7 @@ public class DistributedVertexCover implements DataInterface{
 	public void reduceData(Text _key, Iterable<Text> values,
 			org.apache.hadoop.mapreduce.Reducer.Context context) {
 		// TODO Auto-generated method stub
-		Path pt=new Path(Macros.RECORDFILE);
+		Path pt=new Path(Macros.ROUNDRESULTFILE);
 		try {
 			FileSystem fs = FileSystem.get(new Configuration());
 		} catch (IOException e1) {

@@ -13,7 +13,7 @@ import edu.nus.submodular.graph.algorithm.impl.GraphEdgeCover;
 import edu.nus.submodular.graph.algorithm.impl.GraphVertexCover;
 
 public class SubmodularCombiner extends Reducer<Text, Text, Text, Text> {
-	DataInterface inter=new DistributedVertexCover();
+	DataInterface inter=new DistributedEdgeCover();
 	public SubmodularCombiner()
 	{
 		System.out.println("Combiner Created!");
