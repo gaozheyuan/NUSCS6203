@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class AbstractAlgo {
 	protected ArrayList<double[]> dataset;
-	protected ArrayList<Integer> representations;
+	protected ArrayList<double[]> representations;
 	public ArrayList<double[]> getDataset() {
 		return dataset;
 	}

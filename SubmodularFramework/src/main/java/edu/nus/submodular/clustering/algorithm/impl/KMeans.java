@@ -25,67 +25,82 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 		dataset=new ArrayList<double[]>();
 	}
 	public ArrayList<double[]> getCombinerRepresentationData(int numofData) {
-		representations=new ArrayList<Integer>();
-		ArrayList<double[]> result=new ArrayList<double[]>();
+		representations=new ArrayList<double[]>();
 		for(int i=0;i<numofData;i++)
 		{
-			int pickIndex=pickNextCombinerElement();
-			representations.add(pickIndex);
-			result.add(dataset.get(pickIndex));
+			double[] nextElement=pickNextCombinerElement();//every time pick up the best one
+			representations.add(nextElement);
 		}
-		return result;
+		return representations;
 	}
 	public ArrayList<double[]> getReducerRepresentationData(int numofData,ArrayList<double[]> candidatePoints) {
-		representations=new ArrayList<Integer>();
-		ArrayList<double[]> result=new ArrayList<double[]>();
+		representations=new ArrayList<double[]>();
+		System.out.println("num of data"+numofData);
 		for(int i=0;i<numofData;i++)
 		{
-			int pickIndex=pickNextReducerElement(candidatePoints);
-			representations.add(pickIndex);
-			result.add(candidatePoints.get(pickIndex));
+			System.out.println(i);
+			double[] nextElement=pickNextReducerElement(candidatePoints);
+			representations.add(nextElement);
 		}
-		return result;
+		return representations;
 	}
-	public double calculateTotalError(ArrayList<Integer> representations) {
+	public double calculateTotalError(ArrayList<double[]> rep) {
 		double totalError=0;
-		int[] labels=assignLabel(representations);
+		int[] labels=assignLabel(rep);//assign every node to a group
 		for(int index=0;index<this.dataset.size();index++)
 		{
-			totalError+=calculateTwoElementsError(dataset.get(index),dataset.get(labels[index]));
+			totalError+=calculateTwoElementsError(dataset.get(index),rep.get(labels[index]));
 		}
 		return totalError;
 	}
-	
-	public int[] assignLabel(ArrayList<Integer> representations) {
+
+	public int[] assignLabel(ArrayList<double[]> rep) {
 		int[] result=new int[dataset.size()];
 		for(int index=0;index<dataset.size();index++)
 		{
-			int smallestIndex=0;
+			int smallestIndex=-2;
 			double smallesterror=Double.MAX_VALUE;
 			//We assign the index to each element in the dataset as the label
-			for(int repIndex=0;repIndex<representations.size();repIndex++)
+			for(int repIndex=0;repIndex<rep.size();repIndex++)
 			{
-				double error=calculateTwoElementsError(dataset.get(index),dataset.get(representations.get(repIndex)));
+				double error=calculateTwoElementsError(dataset.get(index),rep.get(repIndex));
 				if(smallesterror>error)
 				{
 					smallesterror=error;
-					smallestIndex=representations.get(repIndex);
+					smallestIndex=repIndex;
 				}
 			}
 			result[index]=smallestIndex;
 		}
 		return result;
 	}
-
-	public int pickNextCombinerElement() {
+	public boolean containElement(ArrayList<double[]> sets,double[] element)
+	{
+		for(int i=0;i<sets.size();i++)
+		{
+			boolean singleResult=true;
+			for(int j=0;j<element.length;j++)
+			{
+				if(sets.get(i)[j]!=element[j])
+				{
+					singleResult=false;
+					break;
+				}
+			}
+			if(singleResult==true)
+				return true;
+		}
+		return false;
+	}
+	public double[] pickNextCombinerElement() {
 		double smallestError=Double.MAX_VALUE;
 		int smallestIndex=-1;
 		for(int index=0;index<dataset.size();index++)
 		{
-			ArrayList<Integer> newRepresentations=(ArrayList<Integer>)representations.clone();
-			if(!representations.contains(index))
+			ArrayList<double[]> newRepresentations=(ArrayList<double[]>)representations.clone();
+			if(!containElement(representations, dataset.get(index)))
 			{
-				newRepresentations.add(index);
+				newRepresentations.add(dataset.get(index));
 				double totalerror=calculateTotalError(newRepresentations);
 				if(smallestError>totalerror)
 				{
@@ -94,19 +109,21 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 				}
 			}
 		}
-		return smallestIndex;
+		return dataset.get(smallestIndex);
 	}
-	public int pickNextReducerElement(ArrayList<double[]> candidatePoints)
+	public double[] pickNextReducerElement(ArrayList<double[]> candidatePoints)
 	{
 		double smallestError=Double.MAX_VALUE;
 		int smallestIndex=-1;
 		for(int index=0;index<candidatePoints.size();index++)
 		{
-			ArrayList<Integer> newRepresentations=(ArrayList<Integer>)representations.clone();
-			if(!representations.contains(index))
+			System.err.print("candidate index"+index);
+			ArrayList<double[]> newRepresentations=(ArrayList<double[]>)representations.clone();
+			if(!containElement(representations, candidatePoints.get(index)))
 			{
-				newRepresentations.add(index);
+				newRepresentations.add(candidatePoints.get(index));
 				double totalerror=calculateTotalError(newRepresentations);
+				System.out.println("totalerror "+totalerror);
 				if(smallestError>totalerror)
 				{
 					smallestError=totalerror;
@@ -114,7 +131,9 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 				}
 			}
 		}
-		return smallestIndex;
+		System.err.println("hahaha");
+		System.err.println("smallest index"+ smallestIndex);
+		return candidatePoints.get(smallestIndex);
 	}
 	public double calculateTwoElementsError(double[] first, double[] second) {
 		double result=0;
@@ -166,9 +185,11 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 			{
 				feature[indexFeature]=Double.parseDouble(strFeatures[indexFeature]);
 			}
-			this.getDataset().add(feature);
+			getDataset().add(feature);
 		}
+		System.out.println("asdasd");
 		ArrayList<double[]> repData=getCombinerRepresentationData(numOfElement);
+		System.out.println(repData.size());
 		Text writeResult=new Text();
 		for(int index=0;index<repData.size();index++)
 		{
@@ -197,10 +218,7 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 		readSourceFile(sourcePath);
 		ArrayList<double[]> candidateData=new ArrayList<double[]>();
 		System.out.println("asd");
-		int i=0;
-		System.err.println(i);
 		for (Text val : values) {
-			System.out.println(val.toString());
 			String[] strFeatures=val.toString().split(" ");
 			numOfFeatures=strFeatures.length;
 			double[] feature=new double[numOfFeatures];
@@ -210,13 +228,15 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 			}
 			candidateData.add(feature);
 		}
+		System.out.println("mark1");
 		ArrayList<double[]> repData=this.getReducerRepresentationData(numOfElement,candidateData);
 		Text writeResult=new Text();
+		System.out.println("mark2");
 		for(int index=0;index<repData.size();index++)
 		{
 			writeResult=new Text();
 			String output=convertRepDatatoString(repData.get(index));
-			System.out.println(output);
+			System.out.println("output"+output);
 			writeResult.set(output);
 			try {
 				context.write(_key, writeResult);
