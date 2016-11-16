@@ -211,6 +211,8 @@ public class DistributedEdgeCover implements DataInterface{
 			int numOfElement=context.getConfiguration().getInt(Macros.NUMOFELEMENT, -1);
 			computeResult(numOfElement);
 			Iterator<String> resultIter=resultVertex.iterator();
+			Text empty_key=new Text();
+			empty_key.set("");
 			while(resultIter.hasNext())
 			{
 				String result=resultIter.next();
@@ -218,7 +220,7 @@ public class DistributedEdgeCover implements DataInterface{
 				txt_result.set(result);
 				System.err.println(result);
 				try {
-					context.write(_key, txt_result);
+					context.write(empty_key, txt_result);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

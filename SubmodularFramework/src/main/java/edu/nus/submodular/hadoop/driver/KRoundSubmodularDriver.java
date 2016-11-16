@@ -1,8 +1,13 @@
 package edu.nus.submodular.hadoop.driver;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -59,6 +64,41 @@ public class KRoundSubmodularDriver {
             round++;
             numOfElements++;
             System.out.println(round);
+		}
+	}
+	public static void combineTwoFiles(String dcFile,String gdFile, Configuration conf)
+	{
+		Path dcPath=new Path(dcFile);
+		Path gdPath=new Path(gdFile);
+		Set<String> result=new HashSet<String>();
+		try {
+			FileSystem fs = FileSystem.get(conf);
+			BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(dcPath)));
+			while(true)
+			{
+				String node=br.readLine();
+				if(node==null)
+					break;
+				result.add(node.trim());
+			}
+			br=new BufferedReader(new InputStreamReader(fs.open(gdPath)));
+			while(true)
+			{
+				String node=br.readLine();
+				if(node==null)
+					break;
+				result.add(node.trim());
+			}
+			FSDataOutputStream out=fs.create(dcPath);
+			Iterator<String> resultIter=result.iterator();
+			while(resultIter.hasNext())
+			{
+				out.writeBytes(resultIter.next());
+				out.writeChar('\n');
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 }

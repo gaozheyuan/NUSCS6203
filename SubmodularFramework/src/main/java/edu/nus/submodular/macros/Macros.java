@@ -9,4 +9,5 @@ public class Macros {
 	public static String ALPHA="alpha";
 	public static String LAMDA="lamda";
 	public static String CONSTRAINT="constraint";
+	public static String INPUTPATH="inputpath";
 }

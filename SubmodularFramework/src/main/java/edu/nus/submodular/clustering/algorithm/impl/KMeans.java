@@ -1,31 +1,51 @@
 package edu.nus.submodular.clustering.algorithm.impl;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper.Context;
 
 import edu.nus.submodular.clustering.algorithm.abst.AbstractAlgo;
 import edu.nus.submodular.datainterface.DataInterface;
+import edu.nus.submodular.macros.Macros;
 
 public class KMeans extends AbstractAlgo implements DataInterface{
 	public KMeans()
 	{
 		dataset=new ArrayList<double[]>();
 	}
-	public ArrayList<double[]> getRepresentationData(int numofData) {
+	public ArrayList<double[]> getCombinerRepresentationData(int numofData) {
 		representations=new ArrayList<Integer>();
 		ArrayList<double[]> result=new ArrayList<double[]>();
 		for(int i=0;i<numofData;i++)
 		{
-			int pickIndex=pickNextElement();
+			int pickIndex=pickNextCombinerElement();
 			representations.add(pickIndex);
 			result.add(dataset.get(pickIndex));
 		}
 		return result;
 	}
-	
+	public ArrayList<double[]> getReducerRepresentationData(int numofData,ArrayList<double[]> candidatePoints) {
+		representations=new ArrayList<Integer>();
+		ArrayList<double[]> result=new ArrayList<double[]>();
+		for(int i=0;i<numofData;i++)
+		{
+			int pickIndex=pickNextReducerElement(candidatePoints);
+			representations.add(pickIndex);
+			result.add(candidatePoints.get(pickIndex));
+		}
+		return result;
+	}
 	public double calculateTotalError(ArrayList<Integer> representations) {
 		double totalError=0;
 		int[] labels=assignLabel(representations);
@@ -57,7 +77,7 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 		return result;
 	}
 
-	public int pickNextElement() {
+	public int pickNextCombinerElement() {
 		double smallestError=Double.MAX_VALUE;
 		int smallestIndex=-1;
 		for(int index=0;index<dataset.size();index++)
@@ -76,7 +96,26 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 		}
 		return smallestIndex;
 	}
-
+	public int pickNextReducerElement(ArrayList<double[]> candidatePoints)
+	{
+		double smallestError=Double.MAX_VALUE;
+		int smallestIndex=-1;
+		for(int index=0;index<candidatePoints.size();index++)
+		{
+			ArrayList<Integer> newRepresentations=(ArrayList<Integer>)representations.clone();
+			if(!representations.contains(index))
+			{
+				newRepresentations.add(index);
+				double totalerror=calculateTotalError(newRepresentations);
+				if(smallestError>totalerror)
+				{
+					smallestError=totalerror;
+					smallestIndex=index;
+				}
+			}
+		}
+		return smallestIndex;
+	}
 	public double calculateTwoElementsError(double[] first, double[] second) {
 		double result=0;
 		double[] errorArray=new double[first.length];
@@ -105,7 +144,7 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 	public void mapData(LongWritable ikey, Text ivalue, org.apache.hadoop.mapreduce.Mapper.Context context) {
 		// TODO Auto-generated method stub
 		Text texKey = new Text();
-		texKey.set("1");
+		texKey.set(Macros.MAPKEY);
 		try {
 			context.write(texKey, ivalue);
 		} catch (IOException e) {
@@ -118,6 +157,7 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 	}
 	public void combineData(Text _key, Iterable<Text> values, org.apache.hadoop.mapreduce.Reducer.Context  context){
 		int numOfFeatures=0;
+		Integer numOfElement=context.getConfiguration().getInt(Macros.NUMOFELEMENT, -1);
 		for (Text val : values) {
 			String[] strFeatures=val.toString().split(" ");
 			numOfFeatures=strFeatures.length;
@@ -128,7 +168,7 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 			}
 			this.getDataset().add(feature);
 		}
-		ArrayList<double[]> repData=getRepresentationData(5);
+		ArrayList<double[]> repData=getCombinerRepresentationData(numOfElement);
 		Text writeResult=new Text();
 		for(int index=0;index<repData.size();index++)
 		{
@@ -136,6 +176,7 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 			String output=convertRepDatatoString(repData.get(index));
 			writeResult.set(output);
 			try {
+				System.err.println(output);
 				context.write(_key, writeResult);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -149,8 +190,17 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 	}
 	public void reduceData(Text _key, Iterable<Text> values, org.apache.hadoop.mapreduce.Reducer.Context context) {
 		// TODO Auto-generated method stub
+		Configuration conf=context.getConfiguration();
+		Integer numOfElement=conf.getInt(Macros.NUMOFELEMENT, -1);
+		String sourcePath=conf.get(Macros.INPUTPATH);
 		int numOfFeatures=0;
+		readSourceFile(sourcePath);
+		ArrayList<double[]> candidateData=new ArrayList<double[]>();
+		System.out.println("asd");
+		int i=0;
+		System.err.println(i);
 		for (Text val : values) {
+			System.out.println(val.toString());
 			String[] strFeatures=val.toString().split(" ");
 			numOfFeatures=strFeatures.length;
 			double[] feature=new double[numOfFeatures];
@@ -158,14 +208,15 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 			{
 				feature[indexFeature]=Double.parseDouble(strFeatures[indexFeature]);
 			}
-			getDataset().add(feature);
+			candidateData.add(feature);
 		}
-		ArrayList<double[]> repData=getRepresentationData(3);
+		ArrayList<double[]> repData=this.getReducerRepresentationData(numOfElement,candidateData);
 		Text writeResult=new Text();
 		for(int index=0;index<repData.size();index++)
 		{
 			writeResult=new Text();
 			String output=convertRepDatatoString(repData.get(index));
+			System.out.println(output);
 			writeResult.set(output);
 			try {
 				context.write(_key, writeResult);
@@ -176,6 +227,29 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		}
+	}
+	public void readSourceFile(String path)
+	{
+		Path dcPath=new Path(path);
+		Set<String> result=new HashSet<String>();
+		Configuration conf=new Configuration();
+		FileSystem fs;
+		try {
+			fs = FileSystem.get(conf);
+			BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(dcPath)));
+			while (true) {
+				String dataline=br.readLine();
+				if(dataline==null)
+					break;
+				String originData=dataline.trim();
+				String[] data = originData.split(" ");
+				double[] doubledata=new double[data.length];
+				dataset.add(doubledata);
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 }
