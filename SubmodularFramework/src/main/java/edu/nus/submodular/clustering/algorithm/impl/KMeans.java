@@ -47,7 +47,7 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 	public double calculateTotalError(ArrayList<double[]> rep) {
 		double totalError=0;
 		int[] labels=assignLabel(rep);//assign every node to a group
-		for(int index=0;index<this.dataset.size();index++)
+		for(int index=0;index<dataset.size();index++)
 		{
 			totalError+=calculateTwoElementsError(dataset.get(index),rep.get(labels[index]));
 		}
@@ -58,7 +58,7 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 		int[] result=new int[dataset.size()];
 		for(int index=0;index<dataset.size();index++)
 		{
-			int smallestIndex=-2;
+			int smallestIndex=-1;
 			double smallesterror=Double.MAX_VALUE;
 			//We assign the index to each element in the dataset as the label
 			for(int repIndex=0;repIndex<rep.size();repIndex++)
@@ -228,18 +228,60 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 			}
 			candidateData.add(feature);
 		}
-		System.out.println("mark1");
 		ArrayList<double[]> repData=this.getReducerRepresentationData(numOfElement,candidateData);
 		Text writeResult=new Text();
-		System.out.println("mark2");
 		for(int index=0;index<repData.size();index++)
 		{
 			writeResult=new Text();
 			String output=convertRepDatatoString(repData.get(index));
-			System.out.println("output"+output);
 			writeResult.set(output);
+			Text resultkey=new Text();
+			resultkey.set("result");
 			try {
-				context.write(_key, writeResult);
+				context.write(resultkey, writeResult);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		//output the error value
+		double totalerror=this.calculateTotalError(repData);
+		Text errorkey=new Text();
+		errorkey.set("totalerror");
+		writeResult=new Text();
+		writeResult.set(new Double(totalerror).toString() );
+		try {
+			context.write(errorkey, writeResult);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		//output the number of elements in each group
+		int[] label=this.assignLabel(repData);
+		Set<Integer> labelSet=new HashSet<Integer>();
+		for(int element:label)
+		{
+			labelSet.add(element);
+		}
+		Integer[] num=new Integer[labelSet.size()];
+		for(int i=0;i<num.length;i++)
+			num[i]=0;
+		for(Integer element:label)
+			num[element]++;
+		Text numkey=new Text();
+		numkey.set("groupSize");
+		for(int i=0;i<num.length;i++)
+		{
+			writeResult=new Text();
+			writeResult.set(new Integer(num[i]).toString());
+			try {
+				context.write(numkey, writeResult);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -263,8 +305,11 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 				if(dataline==null)
 					break;
 				String originData=dataline.trim();
-				String[] data = originData.split(" ");
-				double[] doubledata=new double[data.length];
+				System.out.println("read data"+originData);
+				String[] strdata = originData.split(" ");
+				double[] doubledata=new double[strdata.length];
+				for(int i=0;i<strdata.length;i++)
+					doubledata[i]=Double.parseDouble(strdata[i]);
 				dataset.add(doubledata);
 			}
 		} catch (IOException e) {

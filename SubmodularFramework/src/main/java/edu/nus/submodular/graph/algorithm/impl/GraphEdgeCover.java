@@ -18,6 +18,7 @@ import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleGraph;
 
 import edu.nus.submodular.datainterface.DataInterface;
+import edu.nus.submodular.macros.Macros;
 
 public class GraphEdgeCover implements DataInterface{
 	public Set<DefaultEdge> coveredEdge = new HashSet<DefaultEdge>();
@@ -35,11 +36,15 @@ public class GraphEdgeCover implements DataInterface{
 			if(!graph.containsVertex(vertex[i]))
 			{
 				graph.addVertex(vertex[i]);
+				System.out.println(vertex[i]);
 			}
 			if(i!=0)
 			{
-				if(!graph.containsEdge(vertex[0], vertex[i]))
-					graph.addEdge(vertex[0], vertex[i]);
+				if(!vertex[0].equals(vertex[i]))
+				{
+					if(!graph.containsEdge(vertex[0], vertex[i]))
+						graph.addEdge(vertex[0], vertex[i]);
+				}
 			}
 		};
 	}
@@ -108,7 +113,7 @@ public class GraphEdgeCover implements DataInterface{
 	{
 		GraphEdgeCover vc=new GraphEdgeCover();
 		try {
-			BufferedReader br = new BufferedReader(new FileReader("file.txt"));
+			BufferedReader br = new BufferedReader(new FileReader("graphdata/CA-GrQc.txt"));
 			String line=br.readLine();
 			while(line!=null)
 			{
@@ -127,9 +132,8 @@ public class GraphEdgeCover implements DataInterface{
 	}
 	public void mapData(LongWritable ikey, Text ivalue, Context context) {
 		Text texKey = new Text();
-		texKey.set("1");
+		texKey.set(Macros.MAPKEY);
 		try {
-			System.out.println(ivalue);
 			context.write(texKey, ivalue);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -140,8 +144,8 @@ public class GraphEdgeCover implements DataInterface{
 		}
 	}
 	public void combineData(Text _key, Iterable<Text> values,
-			org.apache.hadoop.mapreduce.Reducer.Context context)
-			{
+			org.apache.hadoop.mapreduce.Reducer.Context context)	
+	{
 		for(Text data:values)
 		{
 			String[] vertex=data.toString().split(" |\\t");		
@@ -151,13 +155,15 @@ public class GraphEdgeCover implements DataInterface{
 				{
 					graph.addVertex(vertex[i]);
 				}
-				if(i!=0)
-				{
-					if(!graph.containsEdge(vertex[0], vertex[i]))
-						graph.addEdge(vertex[0], vertex[i]);
+				if(i!=0&&!(vertex[0].equals(vertex[i])))
+				{		
+					graph.addEdge(vertex[0], vertex[i]);
+					System.err.println(vertex[i]);
 				}
-			};
+			}
+			System.err.println("kk");
 		}
+		System.err.println("good");
 		computeResult();
 		Iterator<String> resultIter=resultVertex.iterator();
 		while(resultIter.hasNext())

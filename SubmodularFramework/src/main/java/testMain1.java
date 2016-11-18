@@ -25,7 +25,10 @@ public class testMain1 {
 	}
 	public static void combineTwoFiles(String dcFile,String gdFile, Configuration conf)
 	{
-		Path dcPath=new Path(dcFile);
+		String a="a";
+		String b="b";
+		System.out.println(a==b);
+/*		Path dcPath=new Path(dcFile);
 		Path gdPath=new Path(gdFile);
 		Set<String> result=new HashSet<String>();
 		try {
@@ -61,6 +64,6 @@ public class testMain1 {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 	}
 }

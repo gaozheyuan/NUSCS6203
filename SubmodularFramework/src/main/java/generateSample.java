@@ -9,8 +9,8 @@ public class generateSample {
 	public static void main(String[] args)
 	{
 		int numofFeatures=10;
-		int numofElements=10000;
-		File inputFile=new File("testinput.txt");
+		int numofElements=5000;
+		File inputFile=new File("testinput5000.txt");
 		try {
 			for(int y=0;y<numofElements;y++)
 			{

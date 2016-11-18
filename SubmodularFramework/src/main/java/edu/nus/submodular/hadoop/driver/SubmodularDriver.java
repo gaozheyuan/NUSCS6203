@@ -24,9 +24,10 @@ public class SubmodularDriver {
 	public static void main(String[] args) throws Exception {
 	
 		Configuration conf = new Configuration();
-		Integer numOfElement=Integer.parseInt(args[2]);
+		conf.set(Macros.PROGRAMNAME, args[0]);
+		conf.set(Macros.INPUTPATH, args[1]);
+		Integer numOfElement=Integer.parseInt(args[3]);
 		conf.setInt(Macros.NUMOFELEMENT, numOfElement);
-		conf.set(Macros.INPUTPATH, args[0]);
 		Job job = Job.getInstance(conf, "JobName");
 		job.setJarByClass(edu.nus.submodular.hadoop.driver.SubmodularDriver.class);
 		job.setMapperClass(SubmodularMapper.class);
@@ -34,8 +35,9 @@ public class SubmodularDriver {
 		job.setReducerClass(SubmodularReducer.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
-		FileInputFormat.setInputPaths(job, new Path(args[0]));
-		FileOutputFormat.setOutputPath(job, new Path(args[1]));
+		FileInputFormat.setInputPaths(job, new Path(args[1]));
+		FileOutputFormat.setOutputPath(job, new Path(args[2]));
+		
 		if (!job.waitForCompletion(true))
 			return;
 	}

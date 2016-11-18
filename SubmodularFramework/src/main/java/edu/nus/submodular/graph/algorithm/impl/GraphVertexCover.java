@@ -3,10 +3,14 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper.Context;
@@ -36,8 +40,11 @@ public class GraphVertexCover implements DataInterface{
 			}
 			if(i!=0)
 			{
-				if(!graph.containsEdge(vertex[0], vertex[i]))
-					graph.addEdge(vertex[0], vertex[i]);
+				if(!vertex[0].equals(vertex[i]))
+				{
+					if(!graph.containsEdge(vertex[0], vertex[i]))
+						graph.addEdge(vertex[0], vertex[i]);
+				}
 			}
 		};
 	}
@@ -97,7 +104,6 @@ public class GraphVertexCover implements DataInterface{
 		else
 		{
 			resultVertex.add(selectNode);
-			System.out.println(selectNode);
 			Set<DefaultEdge> outEdges=graph.edgesOf(selectNode);
 			Iterator<DefaultEdge> edgeIter=outEdges.iterator();
 			while(edgeIter.hasNext())
@@ -144,7 +150,7 @@ public class GraphVertexCover implements DataInterface{
 				{
 					graph.addVertex(vertex[i]);
 				}
-				if(i!=0)
+				if(i!=0&&!(vertex[0].equals(vertex[i])))
 				{
 					if(!graph.containsEdge(vertex[0], vertex[i]))
 						graph.addEdge(vertex[0], vertex[i]);
@@ -170,12 +176,12 @@ public class GraphVertexCover implements DataInterface{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			System.out.println("size"+resultVertex.size());
 		}
 	}
 	public void reduceData(Text _key, Iterable<Text> values,
 			org.apache.hadoop.mapreduce.Reducer.Context context) {
 		// TODO Auto-generated method stub
+		
 		for(Text data:values)
 		{
 			try {
@@ -187,6 +193,27 @@ public class GraphVertexCover implements DataInterface{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		}
+	}
+	public void readSourceFile(String path)
+	{
+		Path dcPath=new Path(path);
+		Set<String> result=new HashSet<String>();
+		Configuration conf=new Configuration();
+		FileSystem fs;
+		try {
+			fs = FileSystem.get(conf);
+			BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(dcPath)));
+			while (true) {
+				String dataline=br.readLine();
+				if(dataline==null)
+					break;
+				String originData=dataline.trim();
+				this.addGraphData(originData);
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 }
