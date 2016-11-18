@@ -31,6 +31,25 @@ public class SubmodularReducer extends Reducer<Text, Text, Text, Text> {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			break;
+		case "GraphEdgeCover":
+			try {
+				inter=(KMeans)Class.forName("edu.nus.submodular.graph.algorithm.impl.GraphEdgeCover").newInstance();
+			} catch (InstantiationException | IllegalAccessException
+					| ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			break;
+		case "GraphVertexCover":
+			try {
+				inter=(KMeans)Class.forName("edu.nus.submodular.graph.algorithm.impl.GraphVertexCover").newInstance();
+			} catch (InstantiationException | IllegalAccessException
+					| ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			break;		
 		}
 		inter.reduceData(_key, values, context);
 	}

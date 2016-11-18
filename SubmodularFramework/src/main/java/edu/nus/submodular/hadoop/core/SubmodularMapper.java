@@ -32,6 +32,25 @@ public class SubmodularMapper extends Mapper<LongWritable, Text, Text, Text> {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			break;
+		case "GraphEdgeCover":
+			try {
+				inter=(KMeans)Class.forName("edu.nus.submodular.graph.algorithm.impl.GraphEdgeCover").newInstance();
+			} catch (InstantiationException | IllegalAccessException
+					| ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			break;
+		case "GraphVertexCover":
+			try {
+				inter=(KMeans)Class.forName("edu.nus.submodular.graph.algorithm.impl.GraphVertexCover").newInstance();
+			} catch (InstantiationException | IllegalAccessException
+					| ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			break;
 		}
 		inter.mapData(ikey, ivalue, context);
 	}
