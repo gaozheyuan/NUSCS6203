@@ -1,5 +1,6 @@
 package edu.nus.submodular.clustering.algorithm.impl;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
@@ -299,18 +301,40 @@ public class KMeans extends AbstractAlgo implements DataInterface{
 		FileSystem fs;
 		try {
 			fs = FileSystem.get(conf);
-			BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(dcPath)));
-			while (true) {
-				String dataline=br.readLine();
-				if(dataline==null)
-					break;
-				String originData=dataline.trim();
-				System.out.println("read data"+originData);
-				String[] strdata = originData.split(" ");
-				double[] doubledata=new double[strdata.length];
-				for(int i=0;i<strdata.length;i++)
-					doubledata[i]=Double.parseDouble(strdata[i]);
-				dataset.add(doubledata);
+			if(!fs.isDirectory(dcPath))
+			{
+				BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(dcPath)));
+				while (true) {
+					String dataline=br.readLine();
+					if(dataline==null)
+						break;
+					String originData=dataline.trim();
+					System.out.println("read data"+originData);
+					String[] strdata = originData.split(" ");
+					double[] doubledata=new double[strdata.length];
+					for(int i=0;i<strdata.length;i++)
+						doubledata[i]=Double.parseDouble(strdata[i]);
+					dataset.add(doubledata);
+				}
+			}
+			else
+			{
+				FileStatus[] status=fs.listStatus(dcPath);
+				for(int index=0;index<status.length;index++)
+				{
+					BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(status[index].getPath())));
+					while (true) {
+						String dataline=br.readLine();
+						if(dataline==null)
+							break;
+						String originData=dataline.trim();
+						String[] strdata = originData.split(" ");
+						double[] doubledata=new double[strdata.length];
+						for(int i=0;i<strdata.length;i++)
+							doubledata[i]=Double.parseDouble(strdata[i]);
+						dataset.add(doubledata);
+					}
+				}
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

@@ -7,8 +7,6 @@ import org.apache.hadoop.mapreduce.Mapper;
 
 import edu.nus.submodular.clustering.algorithm.impl.KMeans;
 import edu.nus.submodular.datainterface.DataInterface;
-import edu.nus.submodular.graph.algorithm.impl.DistributedEdgeCover;
-import edu.nus.submodular.graph.algorithm.impl.DistributedVertexCover;
 import edu.nus.submodular.graph.algorithm.impl.GraphEdgeCover;
 import edu.nus.submodular.graph.algorithm.impl.GraphVertexCover;
 import edu.nus.submodular.macros.Macros;
@@ -35,7 +33,7 @@ public class SubmodularMapper extends Mapper<LongWritable, Text, Text, Text> {
 			break;
 		case "GraphEdgeCover":
 			try {
-				inter=(KMeans)Class.forName("edu.nus.submodular.graph.algorithm.impl.GraphEdgeCover").newInstance();
+				inter=(GraphEdgeCover)Class.forName("edu.nus.submodular.graph.algorithm.impl.GraphEdgeCover").newInstance();
 			} catch (InstantiationException | IllegalAccessException
 					| ClassNotFoundException e) {
 				// TODO Auto-generated catch block
@@ -44,7 +42,7 @@ public class SubmodularMapper extends Mapper<LongWritable, Text, Text, Text> {
 			break;
 		case "GraphVertexCover":
 			try {
-				inter=(KMeans)Class.forName("edu.nus.submodular.graph.algorithm.impl.GraphVertexCover").newInstance();
+				inter=(GraphVertexCover)Class.forName("edu.nus.submodular.graph.algorithm.impl.GraphVertexCover").newInstance();
 			} catch (InstantiationException | IllegalAccessException
 					| ClassNotFoundException e) {
 				// TODO Auto-generated catch block

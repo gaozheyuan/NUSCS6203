@@ -10,5 +10,6 @@ public class Macros {
 	public static String LAMDA="lamda";
 	public static String CONSTRAINT="constraint";
 	public static String INPUTPATH="inputpath";
+	public static String OUTPUTPATH="outputpath";
 	public static String PROGRAMNAME="programname";
 }

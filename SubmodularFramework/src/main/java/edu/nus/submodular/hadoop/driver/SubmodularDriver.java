@@ -1,13 +1,5 @@
 package edu.nus.submodular.hadoop.driver;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.LineNumberReader;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -24,9 +16,10 @@ public class SubmodularDriver {
 	public static void main(String[] args) throws Exception {
 	
 		Configuration conf = new Configuration();
-		conf.set(Macros.PROGRAMNAME, args[0]);
+		conf.set(Macros.PROGRAMNAME, args[0]);		
 		conf.set(Macros.INPUTPATH, args[1]);
-		Integer numOfElement=Integer.parseInt(args[3]);
+		conf.set(Macros.OUTPUTPATH, args[2]);
+		Integer numOfElement=Integer.parseInt(args[3]);	
 		conf.setInt(Macros.NUMOFELEMENT, numOfElement);
 		Job job = Job.getInstance(conf, "JobName");
 		job.setJarByClass(edu.nus.submodular.hadoop.driver.SubmodularDriver.class);

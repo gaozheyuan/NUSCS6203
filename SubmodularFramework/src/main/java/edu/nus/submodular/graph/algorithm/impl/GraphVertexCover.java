@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
@@ -48,21 +49,37 @@ public class GraphVertexCover implements DataInterface{
 			}
 		};
 	}
-	public void computeResult()
+	public void computeResult(int numOfElement,Set<String> candidateSet)
 	{
-		while(true)
+		if(numOfElement==-1)
 		{
-			boolean result=chooseBestOne();
-			if(result==false)
-				break;
+			while(true)
+			{
+				boolean result=chooseBestOne(null);
+				if(result==false)
+					break;
+			}
+		}
+		else
+		{
+			for(int i=0;i<numOfElement;i++)
+			{
+				boolean result=chooseBestOne(candidateSet);
+				if(result==false)
+					break;
+			}
 		}
 	}
-	public boolean chooseBestOne()
+	public boolean chooseBestOne(Set<String> candidateSet)
 	{
 		Set<String> vertexset=graph.vertexSet();  //All the vertex in grpah
 		int maximumBenefit=-1;
 		String selectNode = null;  // final node to be selected
-		Iterator<String> vertexIter=vertexset.iterator();  //get the iterator of vertex
+		Iterator<String> vertexIter;
+		if(candidateSet==null)
+			vertexIter=vertexset.iterator();  //get the iterator of vertex
+		else
+			vertexIter=candidateSet.iterator();
 		while(vertexIter.hasNext())
 		{
 			String srcNode=vertexIter.next();   //check the source node
@@ -128,7 +145,7 @@ public class GraphVertexCover implements DataInterface{
 	public void mapData(LongWritable ikey, Text ivalue, Context context) {
 		// TODO Auto-generated method stub
 		Text texKey = new Text();
-		texKey.set("1");
+		texKey.set(Macros.KEYORIGINAL);
 		try {
 			context.write(texKey, ivalue);
 		} catch (IOException e) {
@@ -157,16 +174,15 @@ public class GraphVertexCover implements DataInterface{
 				}
 			};
 		}
-		computeResult();
+		Integer numOfElement=context.getConfiguration().getInt(Macros.NUMOFELEMENT, -1);
+		computeResult(numOfElement,null);
 		Iterator<String> resultIter=resultVertex.iterator();
 		while(resultIter.hasNext())
 		{
-			System.out.println("size"+resultVertex.size());
 			String result=resultIter.next();
-			System.out.println("key "+_key+"result "+result);
+			_key.set(Macros.KEYORIGINAL);
 			Text txt_result=new Text();
 			txt_result.set(result);
-			System.out.println(context);
 			try {
 				context.write(_key, txt_result);
 			} catch (IOException e) {
@@ -181,11 +197,33 @@ public class GraphVertexCover implements DataInterface{
 	public void reduceData(Text _key, Iterable<Text> values,
 			org.apache.hadoop.mapreduce.Reducer.Context context) {
 		// TODO Auto-generated method stub
-		
+		Set<String> candidateSet=new HashSet<String>();
 		for(Text data:values)
+		{	
+			candidateSet.add(data.toString());
+		}
+		String inputPath=context.getConfiguration().get(Macros.INPUTPATH);
+		readSourceFile(inputPath);
+		Integer numOfElement=context.getConfiguration().getInt(Macros.NUMOFELEMENT, -1);
+		computeResult(numOfElement,candidateSet);
+		Iterator<String> resultIter=resultVertex.iterator();
+		Set<String> resultVertexSet=new HashSet<String>();
+		while(resultIter.hasNext())
 		{
+			String result=resultIter.next();
+			Set<DefaultEdge> edgeofNode=graph.edgesOf(result);
+			Iterator<DefaultEdge> edgeiter=edgeofNode.iterator();
+			while(edgeiter.hasNext())
+			{
+				DefaultEdge edge=edgeiter.next();
+				resultVertexSet.add(graph.getEdgeSource(edge));
+				resultVertexSet.add(graph.getEdgeTarget(edge));
+			}
+			_key.set(Macros.KEYRESULT);
+			Text txt_result=new Text();
+			txt_result.set(result);
 			try {
-				context.write(_key, data);
+				context.write(_key, txt_result);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -193,6 +231,13 @@ public class GraphVertexCover implements DataInterface{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		}
+		_key.set("Covernum");
+		try {
+			context.write(_key, new Integer(resultVertexSet.size()).toString());
+		} catch (IOException | InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	public void readSourceFile(String path)
@@ -203,13 +248,31 @@ public class GraphVertexCover implements DataInterface{
 		FileSystem fs;
 		try {
 			fs = FileSystem.get(conf);
-			BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(dcPath)));
-			while (true) {
-				String dataline=br.readLine();
-				if(dataline==null)
-					break;
-				String originData=dataline.trim();
-				this.addGraphData(originData);
+			if(!fs.isDirectory(dcPath))
+			{
+				BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(dcPath)));
+				while (true) {
+					String dataline=br.readLine();
+					if(dataline==null)
+						break;
+					String originData=dataline.trim();
+					this.addGraphData(originData);
+				}	
+			}
+			else
+			{
+				FileStatus[] status=fs.listStatus(dcPath);
+				for(int index=0;index<status.length;index++)
+				{
+					BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(status[index].getPath())));
+					while (true) {
+						String dataline=br.readLine();
+						if(dataline==null)
+							break;
+						String originData=dataline.trim();
+						this.addGraphData(originData);
+					}	
+				}
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
